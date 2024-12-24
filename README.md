@@ -32,4 +32,4 @@ This repository contains the code for a simple **Endless Runner Game** designed 
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Adirdavi/LineMaster.git
+   git clone https://github.com/Adirdavi/MyGame.git
