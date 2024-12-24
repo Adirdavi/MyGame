@@ -1,6 +1,6 @@
-# Endless Runner Game
+# Endless Driving Game
 
-This repository contains the code for a simple **Endless Runner Game** designed as part of a homework assignment. The game is a three-lane road race where the player avoids obstacles and survives as long as possible.
+This repository contains the code for a simple **Endless Driving Game** designed as part of a homework assignment. The game is a three-lane road race where the player avoids obstacles and survives as long as possible.
 
 ## Features
 
