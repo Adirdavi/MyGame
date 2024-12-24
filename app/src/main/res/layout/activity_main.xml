@@ -6,31 +6,30 @@
     android:layout_height="match_parent"
     android:background="@drawable/background">
 
-    <!-- לבבות לחיים -->
     <LinearLayout
         android:id="@+id/health_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginStart="5dp"
-        android:gravity="end"> <!-- הזזה לימין -->
+        android:layout_marginTop="@dimen/heartlayout"
+        android:layout_marginEnd="@dimen/heartlayout"
+        android:layout_marginStart="@dimen/heartlayout"
+        android:gravity="end">
 
         <ImageView
             android:id="@+id/heart3"
             android:layout_width="@dimen/heart_size"
             android:layout_height="@dimen/heart_size"
             android:src="@drawable/heart"
-            android:layout_marginEnd="10dp" />
+            android:layout_marginRight="@dimen/heartRight" />
 
         <ImageView
             android:id="@+id/heart2"
             android:layout_width="@dimen/heart_size"
             android:layout_height="@dimen/heart_size"
             android:src="@drawable/heart"
-            android:layout_marginEnd="10dp" />
+            android:layout_marginRight="@dimen/heartRight" />
 
         <ImageView
             android:id="@+id/heart1"
@@ -39,67 +38,51 @@
             android:src="@drawable/heart" />
     </LinearLayout>
 
-    <!-- אזור המשחק -->
     <RelativeLayout
         android:id="@+id/game_area"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="@dimen/gameArea"
         tools:ignore="ExtraText">
 
-
-        <!-- נתיבים -->
         <LinearLayout
             android:id="@+id/lanes"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <!-- נתיב שמאלי -->
             <FrameLayout
                 android:id="@+id/lane_left"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                >
+                android:layout_weight="1">
+            </FrameLayout>
 
-            </FrameLayout> <!-- צבע רקע להמחשה -->
-
-            <!-- נתיב אמצעי -->
-            <!-- נתיב ימני -->
             <FrameLayout
                 android:id="@+id/lane_center"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"> <!-- צבע רקע להמחשה -->
-
-
+                android:layout_weight="1">
             </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/lane_right"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                >
-
-
-            </FrameLayout> <!-- צבע רקע להמחשה -->
+                android:layout_weight="1">
+            </FrameLayout>
         </LinearLayout>
 
-        <!-- רכב -->
         <ImageView
             android:id="@+id/car_id"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/carsize"
+            android:layout_height="@dimen/carsize"
             android:src="@drawable/racing_car"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="60dp"
-            />
+            android:layout_marginBottom="@dimen/carDown" />
     </RelativeLayout>
 
-    <!-- כפתורים -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -127,7 +110,6 @@
             android:clickable="true"
             android:backgroundTint="@color/green"
             android:importantForAccessibility="no"
-            app:srcCompat="@drawable/left_button"
-            />
+            app:srcCompat="@drawable/left_button" />
     </FrameLayout>
 </RelativeLayout>
