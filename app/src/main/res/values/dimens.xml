@@ -2,9 +2,9 @@
 <resources>
     <dimen name="default_margin_button">10dp</dimen>
     <dimen name="heart_size">40dp</dimen>
-    <dimen name="carsize">100dp</dimen>
+    <dimen name="carsize">50dp</dimen>
     <dimen name="heartlayout">5dp</dimen>
     <dimen name="heartRight">10dp</dimen>
     <dimen name="gameArea">50dp</dimen>
-    <dimen name="carDown">60dp</dimen>
+    <dimen name="carDown">70dp</dimen>
 </resources>

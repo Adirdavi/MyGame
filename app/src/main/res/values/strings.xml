@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Line Master</string>
+    <string name="mode_game"> Mode Game</string>
 </resources>
