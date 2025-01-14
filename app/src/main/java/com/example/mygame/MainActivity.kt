@@ -1,336 +1,166 @@
 package com.example.mygame
 
-import android.media.MediaPlayer
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.view.View
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlin.random.Random
+import androidx.core.app.ActivityCompat
+import com.example.mygame.interfaces.GameOverListener
+import com.example.mygame.interfaces.TiltCallback
+import com.example.mygame.models.PlayerScore
+import com.example.mygame.utilities.GameManager
+import com.example.mygame.utilities.SoundManager
+import com.example.mygame.utilities.TiltDetector
+import com.example.mygame.utilities.UIManager
+import com.example.mygame.utilities.VibrationManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 @Suppress("DEPRECATION")
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var gameArea: RelativeLayout
-    private lateinit var laneLeftOuter: View
-    private lateinit var laneLeft: View
-    private lateinit var laneCenter: View
-    private lateinit var laneRight: View
-    private lateinit var laneRightOuter: View
-    private lateinit var car: ImageView
-    private lateinit var buttonLeft: FloatingActionButton
-    private lateinit var buttonRight: FloatingActionButton
-
-    private lateinit var heart1: ImageView
-    private lateinit var heart2: ImageView
-    private lateinit var heart3: ImageView
-
-    private lateinit var scoreTextView: TextView
-
-    private var currentLane: Int = 2
-    private val handler = Handler(Looper.getMainLooper())
-    private val random = Random.Default
-    private var lives = 3
-    private var score = 0
-    private var coinScore = 0
-    private var firstObstaclePassed = false
-
-    private val rows = 8
-    private val cols = 5
-    private val obstaclesMatrix = Array(rows) { arrayOfNulls<ImageView?>(cols) }
-    private val coinsMatrix = Array(rows) { arrayOfNulls<ImageView?>(cols) }
-    private val obstacleHistory = mutableListOf<Int>()
-
-    private lateinit var vibrator: Vibrator
-    private lateinit var crashSound: MediaPlayer
-    private lateinit var coinCollectSound: MediaPlayer
-
-    private var movingObstacles = false
-    private var isCollision = false
+class MainActivity : AppCompatActivity(), GameOverListener {
+    private lateinit var gameManager: GameManager
+    private lateinit var uiManager: UIManager
+    private lateinit var soundManager: SoundManager
+    private lateinit var vibrationManager: VibrationManager
+    private lateinit var scoresManager: ScoreManager
+    private lateinit var playerName: String
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var tiltDetector: TiltDetector? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // אתחול סאונד ההתנגשות
-        crashSound = MediaPlayer.create(this, R.raw.car_crash_sound)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        initializeManagers()
+        setupGame()
+        requestLocationPermissions()
+    }
 
-        // אתחול סאונד איסוף המטבע
-        coinCollectSound = MediaPlayer.create(this, R.raw.coin_sound)
+    private fun initializeManagers() {
+        soundManager = SoundManager(this)
+        uiManager = UIManager(this)
+        vibrationManager = VibrationManager(this)
+        scoresManager = ScoreManager(this)
 
-        findViews()
-        initMatrix()
-        initCoins()
+        gameManager = GameManager(
+            context = this,
+            uiManager = uiManager,
+            soundManager = soundManager,
+            vibrationManager = vibrationManager,
+            gameOverListener = this
+        )
+    }
 
-        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+    private fun setupGame() {
+        playerName = intent.getStringExtra(PLAYER_NAME_KEY).orEmpty()
+        val isSensorMode = intent.getBooleanExtra(GAME_MODE_KEY, false)
+        val difficulty = intent.getStringExtra(DIFFICULTY_KEY) ?: DEFAULT_DIFFICULTY
 
-        buttonLeft.setOnClickListener { moveCarLeft() }
-        buttonRight.setOnClickListener { moveCarRight() }
+        if (isSensorMode) {
+            tiltDetector = TiltDetector(this, object : TiltCallback {
+                override fun tiltX(direction: Int) {
+                    runOnUiThread {
+                        gameManager.handleTilt(direction)
+                    }
+                }
+            })
+        }
 
-        startObstacleMovement()
+        gameManager.setupGame(
+            playerName = playerName,
+            isSensorMode = isSensorMode,
+            difficulty = difficulty
+        )
+    }
+
+    override fun onGameOver(score: Int) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    val playerScore = PlayerScore(
+                        playerName = playerName,
+                        score = score,
+                        latitude = location?.latitude ?: DEFAULT_LATITUDE,
+                        longitude = location?.longitude ?: DEFAULT_LONGITUDE
+                    )
+
+                    scoresManager.saveScore(playerScore)
+                    navigateToHighScores()
+                }
+                .addOnFailureListener {
+                    saveScoreWithDefaultLocation(score)
+                }
+        } else {
+            saveScoreWithDefaultLocation(score)
+        }
+    }
+
+    private fun saveScoreWithDefaultLocation(score: Int) {
+        val playerScore = PlayerScore(
+            playerName = playerName,
+            score = score,
+            latitude = DEFAULT_LATITUDE,
+            longitude = DEFAULT_LONGITUDE
+        )
+        scoresManager.saveScore(playerScore)
+        navigateToHighScores()
+    }
+
+    private fun navigateToHighScores() {
+        val intent = Intent(this, HighScoresActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun requestLocationPermissions() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        startObstacleMovement()
+        gameManager.resumeGame()
+        tiltDetector?.start()
     }
 
     override fun onPause() {
         super.onPause()
-        handler.removeCallbacksAndMessages(null)
+        gameManager.pauseGame()
+        tiltDetector?.stop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        crashSound.release()
-        coinCollectSound.release()
+        soundManager.release()
+        tiltDetector?.stop()
     }
 
-    private fun findViews() {
-        gameArea = findViewById(R.id.game_area)
-        laneLeftOuter = findViewById(R.id.lane_left_outer)
-        laneLeft = findViewById(R.id.lane_left)
-        laneCenter = findViewById(R.id.lane_center)
-        laneRight = findViewById(R.id.lane_right)
-        laneRightOuter = findViewById(R.id.lane_right_outer)
-        car = findViewById(R.id.car_id)
-        buttonLeft = findViewById(R.id.left_button_id)
-        buttonRight = findViewById(R.id.right_button_id)
 
-        heart1 = findViewById(R.id.heart1)
-        heart2 = findViewById(R.id.heart2)
-        heart3 = findViewById(R.id.heart3)
-        scoreTextView = findViewById(R.id.score_text_view)
-    }
-
-    private fun createGameElement(size: Int, drawableId: Int): ImageView {
-        return ImageView(this).apply {
-            setImageResource(drawableId)
-            layoutParams = RelativeLayout.LayoutParams(size, size)
-            visibility = View.INVISIBLE
-        }
-    }
-
-    private fun initMatrix() {
-        gameArea.post {
-            val laneWidth = gameArea.width / cols
-            val cellHeight = (gameArea.height - buttonLeft.height) / rows
-
-            val carWidth = car.width
-            val carHeight = car.height
-
-            for (i in 0 until rows) {
-                for (j in 0 until cols) {
-                    val obstacle = createGameElement(carWidth, R.drawable.obstacle)
-                    gameArea.addView(obstacle)
-                    obstaclesMatrix[i][j] = obstacle
-
-                    obstacle.x = (j * laneWidth) + (laneWidth - carWidth) / 2f
-                    obstacle.y = i * cellHeight.toFloat() + (cellHeight - carHeight) / 2f
-                }
-            }
-        }
-    }
-
-    private fun initCoins() {
-        gameArea.post {
-            val laneWidth = gameArea.width / cols
-            val cellHeight = (gameArea.height - buttonLeft.height) / rows
-            val coinSize = (car.width * 0.6).toInt()
-
-            for (i in 0 until rows) {
-                for (j in 0 until cols) {
-                    val coin = createGameElement(coinSize, R.drawable.coin)
-                    gameArea.addView(coin)
-                    coinsMatrix[i][j] = coin
-
-                    coin.x = (j * laneWidth) + (laneWidth - coinSize) / 2f
-                    coin.y = i * cellHeight.toFloat() + (cellHeight - coinSize) / 2f
-                }
-            }
-        }
-    }
-
-    private fun generateNewElements() {
-        // ניקוי השורה העליונה
-        for (j in 0 until cols) {
-            obstaclesMatrix[0][j]?.visibility = View.INVISIBLE
-            coinsMatrix[0][j]?.visibility = View.INVISIBLE
-        }
-
-        // יצירת מכשול
-        var obstacleCol: Int
-        do {
-            obstacleCol = random.nextInt(cols)
-        } while (obstacleHistory.count { it == obstacleCol } >= 2)
-
-        obstaclesMatrix[0][obstacleCol]?.visibility = View.VISIBLE
-        obstacleHistory.add(obstacleCol)
-        if (obstacleHistory.size > 2) {
-            obstacleHistory.removeAt(0)
-        }
-
-        // יצירת מטבע (אם אפשר)
-        if (random.nextInt(2) == 0) {
-            val availableColumns = (0 until cols).filter { it != obstacleCol }
-            if (availableColumns.isNotEmpty()) {
-                val coinCol = availableColumns[random.nextInt(availableColumns.size)]
-                coinsMatrix[0][coinCol]?.visibility = View.VISIBLE
-            }
-        }
-    }
-
-    private fun moveObstaclesDown() {
-        if (movingObstacles) return
-        movingObstacles = true
-        isCollision = false
-
-        var scoreUpdated = false
-        var hasObstacleInLastRow = false
-
-        // בדיקה אם יש מכשול בשורה האחרונה
-        for (j in 0 until cols) {
-            if (obstaclesMatrix[rows - 1][j]?.visibility == View.VISIBLE) {
-                hasObstacleInLastRow = true
-                break
-            }
-        }
-
-        // הזזת אלמנטים למטה
-        for (i in rows - 1 downTo 1) {
-            for (j in 0 until cols) {
-                // הזזת מכשולים
-                obstaclesMatrix[i][j]?.visibility = obstaclesMatrix[i - 1][j]?.visibility ?: View.INVISIBLE
-
-                // הזזת מטבעות רק אם אין מכשול
-                if (obstaclesMatrix[i][j]?.visibility != View.VISIBLE) {
-                    coinsMatrix[i][j]?.visibility = coinsMatrix[i - 1][j]?.visibility ?: View.INVISIBLE
-                } else {
-                    coinsMatrix[i][j]?.visibility = View.INVISIBLE
-                }
-
-                // בדיקת התנגשות בשורה של הרכב
-                if (i == rows - 2 && j == currentLane && obstaclesMatrix[i][j]?.visibility == View.VISIBLE) {
-                    isCollision = true
-                }
-            }
-        }
-
-        // עדכון firstObstaclePassed רק אם המכשול הראשון עבר בלי התנגשות
-        if (hasObstacleInLastRow && !isCollision) {
-            firstObstaclePassed = true
-            // מוסיפים ניקוד על מעבר מכשול בהצלחה
-            if (!scoreUpdated) {
-                score++
-                scoreUpdated = true
-            }
-        }
-
-        generateNewElements()
-        checkCollisions()
-        checkCoinCollection()
-
-        handler.postDelayed({
-            movingObstacles = false
-        }, 500)
-    }
-
-    private fun startObstacleMovement() {
-        handler.post(object : Runnable {
-            override fun run() {
-                moveObstaclesDown()
-                handler.postDelayed(this, 750)
-            }
-        })
-    }
-
-    private fun moveCarLeft() {
-        if (currentLane > 0) {
-            currentLane--
-            updateCarPosition()
-        } else {
-            Toast.makeText(this, "Already in the leftmost lane", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun moveCarRight() {
-        if (currentLane < cols - 1) {
-            currentLane++
-            updateCarPosition()
-        } else {
-            Toast.makeText(this, "Already in the rightmost lane", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun updateCarPosition() {
-        val lane = when (currentLane) {
-            0 -> laneLeftOuter
-            1 -> laneLeft
-            2 -> laneCenter
-            3 -> laneRight
-            else -> laneRightOuter
-        }
-        car.x = lane.x + (lane.width - car.width) / 2
-    }
-
-    private fun checkCollisions() {
-        val carLane = currentLane
-        val obstacle = obstaclesMatrix[rows - 1][carLane]
-        if (obstacle?.visibility == View.VISIBLE) {
-            handleCollision()
-        }
-    }
-
-    private fun checkCoinCollection() {
-        val coin = coinsMatrix[rows - 1][currentLane]
-        if (coin?.visibility == View.VISIBLE) {
-            coin.visibility = View.INVISIBLE
-            coinScore++
-
-            // הפעלת סאונד איסוף המטבע
-            coinCollectSound.seekTo(0)  // חזרה לתחילת הסאונד
-            coinCollectSound.start()
-        }
-        updateScore()  // מעדכנים את התצוגה בנפרד
-    }
-
-    private fun handleCollision() {
-        lives--
-        isCollision = true
-
-        // הפעלת סאונד ההתנגשות
-        crashSound.seekTo(0)  // חזרה לתחילת הסאונד
-        crashSound.start()
-
-        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-
-        Toast.makeText(this, "Crash happened!", Toast.LENGTH_SHORT).show()
-
-        updateHearts()
-
-        if (lives == 0) {
-            Toast.makeText(this, "Game Over!", Toast.LENGTH_LONG).show()
-            finish()
-        }
-    }
-
-    private fun updateHearts() {
-        when (lives) {
-            0 -> heart1.visibility = View.INVISIBLE
-            1 -> heart2.visibility = View.INVISIBLE
-            2 -> heart3.visibility = View.INVISIBLE
-        }
-    }
-
-    private fun updateScore() {
-        val totalScore = score + coinScore
-        scoreTextView.text = "$totalScore"
+    companion object {
+        private const val PLAYER_NAME_KEY = "playerName"
+        private const val GAME_MODE_KEY = "gameMode"
+        private const val DIFFICULTY_KEY = "difficulty"
+        private const val DEFAULT_DIFFICULTY = "EASY"
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+        private const val DEFAULT_LATITUDE = 32.0853
+        private const val DEFAULT_LONGITUDE = 34.7818
     }
 }

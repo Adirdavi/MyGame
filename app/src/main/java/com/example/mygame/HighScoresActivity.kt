@@ -1,20 +1,35 @@
+// HighScoresActivity.kt
 package com.example.mygame
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.mygame.fragments.HighScoreFragment
+import com.example.mygame.fragments.MapFragment
+import com.example.mygame.interfaces.Callback_HighScoreItemClicked
 
 class HighScoresActivity : AppCompatActivity() {
+    private lateinit var mapFragment: MapFragment
+    private lateinit var highScoreFragment: HighScoreFragment
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_high_scores)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+
+        mapFragment = MapFragment()
+        highScoreFragment = HighScoreFragment()
+
+
+        highScoreFragment.highScoreItemClicked = object : Callback_HighScoreItemClicked {
+            override fun highScoreItemClicked(lat: Double, lon: Double) {
+                mapFragment.zoom(lat, lon)
+            }
         }
+
+
+        supportFragmentManager.beginTransaction()
+            .add(R.id.high_scores_frame_list, highScoreFragment)
+            .add(R.id.scores_frame_map, mapFragment)
+            .commit()
     }
 }
