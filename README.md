@@ -1,4 +1,4 @@
-# Endless Driving Game
+# LineMaster Driving Game
 
 ![Game Preview](game-preview.png)
 
