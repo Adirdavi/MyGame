@@ -1,6 +1,6 @@
 # LineMaster Driving Game
 
-![Game Preview](game-preview.png)
+<a href="https://ibb.co/3NnPT7c"><img src="https://i.ibb.co/3NnPT7c/2025-01-12-13-47-20.png" alt="2025-01-12-13-47-20" border="0"></a>
 
 This repository contains the code for a simple **Endless Driving Game** designed as part of a homework assignment. The game is a racing experience where the player avoids obstacles and survives as long as possible.
 
