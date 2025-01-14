@@ -23,7 +23,7 @@
 
         <!-- Activities -->
         <activity
-            android:name=".MenuActivity"
+            android:name=".Activities.MenuActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,11 +32,11 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".Activities.MainActivity"
             android:exported="false" />
 
         <activity
-            android:name=".HighScoresActivity"
+            android:name=".Activities.HighScoresActivity"
             android:exported="false" />
 
         <!-- Google Maps API Key -->

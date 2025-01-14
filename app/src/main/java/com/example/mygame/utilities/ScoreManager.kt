@@ -1,4 +1,4 @@
-package com.example.mygame
+package com.example.mygame.utilities
 
 import android.content.Context
 import com.example.mygame.models.PlayerScore

@@ -1,8 +1,9 @@
 // HighScoresActivity.kt
-package com.example.mygame
+package com.example.mygame.Activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.mygame.R
 import com.example.mygame.fragments.HighScoreFragment
 import com.example.mygame.fragments.MapFragment
 import com.example.mygame.interfaces.Callback_HighScoreItemClicked

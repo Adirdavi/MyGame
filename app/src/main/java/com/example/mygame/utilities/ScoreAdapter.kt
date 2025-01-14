@@ -1,10 +1,11 @@
-package com.example.mygame
+package com.example.mygame.utilities
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mygame.R
 import com.example.mygame.models.PlayerScore
 
 class ScoresAdapter(private val onScoreClicked: (PlayerScore) -> Unit) :

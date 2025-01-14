@@ -10,11 +10,11 @@ import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mygame.MenuActivity
+import com.example.mygame.Activities.MenuActivity
 import com.example.mygame.R
-import com.example.mygame.ScoreManager
-import com.example.mygame.ScoresAdapter
 import com.example.mygame.interfaces.Callback_HighScoreItemClicked
+import com.example.mygame.utilities.ScoreManager
+import com.example.mygame.utilities.ScoresAdapter
 
 class HighScoreFragment : Fragment() {
 

@@ -1,4 +1,4 @@
-package com.example.mygame
+package com.example.mygame.Activities
 
 import android.content.Intent
 import android.graphics.Color
@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.mygame.R
 
 class MenuActivity : AppCompatActivity() {
 

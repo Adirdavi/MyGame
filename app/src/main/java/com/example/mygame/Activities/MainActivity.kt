@@ -1,4 +1,4 @@
-package com.example.mygame
+package com.example.mygame.Activities
 
 import android.Manifest
 import android.content.Intent
@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.example.mygame.R
+import com.example.mygame.utilities.ScoreManager
 import com.example.mygame.interfaces.GameOverListener
 import com.example.mygame.interfaces.TiltCallback
 import com.example.mygame.models.PlayerScore
